@@ -8,7 +8,7 @@ let connectBtn;
 
 function setup() {
   
-  createCanvas(400, 400);
+  createCanvas(windowWidth, windowHeight);
   
 
   background(220);
@@ -18,48 +18,49 @@ function setup() {
   // in setup, we can open ports we have used previously
   // without user interaction
 
-  let usedPorts = usedSerialPorts();
-  if (usedPorts.length > 0) {
-    port.open(usedPorts[0], 9600);
-  }
-
-  // any other ports can be opened via a dialog after
+    // any other ports can be opened via a dialog after
   // user interaction (see connectBtnClick below)
 
   connectBtn = createButton('Connect to Arduino');
   connectBtn.position(80, 200);
   connectBtn.mousePressed(connectBtnClick);
-
-  let sendBtn = createButton('Send hello');
-  sendBtn.position(220, 200);
-  sendBtn.mousePressed(sendBtnClick);
+  connectBtn.style("border", "none")
+  connectBtn.style("border-radius", "15px")
+  connectBtn.style("padding", "30px")
 }
 
 function draw() {
-  // this makes received text scroll up
-  //background(220);
-  copy(0, 0, width, height, 0, -5, width, height);
-  //text(floor(Date.now()/1000)-946684800, 100, 100)
+
+  copy(0, 0, width, height, 0, -1, width, height);
+
+  if (port.opened()){
+    connectBtn.style('background-color', 'green');
+   
+    port.write("\n")
   
-  // reads in complete lines and prints them at the
-  // bottom of the canvas
+  }else{
+    connectBtn.style('background-color', 'red');
+  }
   let str = port.readUntil("\n");
   if (str.length > 0) {
-    console.log(str)
+    if (str == "requesting time"){
+      port.write(str(floor(Date.now()/1000)-946684800-(offset*60)) + "\n");
+    }
+    if (str == 'done!'){
+     
+      text('Time sent', 100, 100)
+      port.close();
+    }
+
     text(str, 10, height-20);
   }
 
-  // changes button label based on connection status
-  if (!port.opened()) {
-    connectBtn.html('Connect to Arduino');
-  } else {
-    connectBtn.html('Disconnect');
-  }
 }
 
 function connectBtnClick() {
   if (!port.opened()) {
     port.open('RaspberryPi', 9600);
+   
   } else {
     port.close();
   }
@@ -69,4 +70,7 @@ function sendBtnClick() {
   let offset = new Date().getTimezoneOffset();
   text(offset*60, 100, 100)
   port.write(str(floor(Date.now()/1000)-946684800-(offset*60)) + "\n");
+}
+function windowResized() {
+  resizeCanvas(windowWidth, windowHeight);
 }
