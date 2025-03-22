@@ -66,5 +66,7 @@ function connectBtnClick() {
 }
 
 function sendBtnClick() {
-  port.write(str(floor(Date.now()/1000)-946684800) + "\n");
+  let offset = new Date().getTimezoneOffset();
+  text(offset*60, 100, 100)
+  port.write(str(floor(Date.now()/1000)-946684800-(offset*60)) + "\n");
 }
